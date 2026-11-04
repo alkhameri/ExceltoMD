@@ -1,0 +1,108 @@
+{
+  "name": "excel-to-markdown-live",
+  "displayName": "Excel to Markdown Live",
+  "description": "Live Excel tables in the built-in Markdown preview. Keep register specifications synchronized with saved workbooks.",
+  "version": "0.1.0",
+  "publisher": "YaseenAlkhameri",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alkhameri/ExceltoMD.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alkhameri/ExceltoMD/issues"
+  },
+  "homepage": "https://github.com/alkhameri/ExceltoMD#readme",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "excel",
+    "xlsx",
+    "xls",
+    "markdown",
+    "registers",
+    "live preview"
+  ],
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Excel files are read only after the workspace is trusted."
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "Workbooks must be available on the local or remote extension host filesystem."
+    }
+  },
+  "contributes": {
+    "markdown.markdownItPlugins": true,
+    "markdown.previewStyles": [
+      "./media/preview.css"
+    ],
+    "commands": [
+      {
+        "command": "excelToMarkdown.refresh",
+        "title": "Excel to Markdown: Refresh Tables"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "markdown",
+        "path": "./snippets/markdown.json"
+      }
+    ],
+    "configuration": {
+      "title": "Excel to Markdown",
+      "properties": {
+        "excelToMarkdown.maxRows": {
+          "type": "integer",
+          "default": 1000,
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Maximum rows per table, including the header. Truncated tables show a notice."
+        },
+        "excelToMarkdown.maxColumns": {
+          "type": "integer",
+          "default": 64,
+          "minimum": 1,
+          "maximum": 256,
+          "description": "Maximum columns per table. A separate 50,000-cell limit also applies."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "vscode:prepublish": "npm run build",
+    "test": "node --test test/*.test.cjs",
+    "test:integration": "npm run build && node test/run-integration.cjs",
+    "check": "npm test && npm run build",
+    "package": "vsce package --no-dependencies --allow-missing-repository",
+    "publish:marketplace": "node scripts/publish.mjs",
+    "example": "node scripts/create-example.cjs"
+  },
+  "devDependencies": {
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.1.0",
+    "esbuild": "0.28.2",
+    "markdown-it": "15.0.3"
+  },
+  "dependencies": {
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "overrides": {
+    "@vscode/vsce": {
+      "minimatch": "11.0.1"
+    }
+  }
+}

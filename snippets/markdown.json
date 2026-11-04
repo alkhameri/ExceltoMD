@@ -1,0 +1,9 @@
+{
+  "Live Excel table": {
+    "prefix": "xls",
+    "body": [
+      "'''xls(${1:registers.xlsx}, ${2:1})'''"
+    ],
+    "description": "Embed a live Excel table in the Markdown preview (1-based sheet number)."
+  }
+}

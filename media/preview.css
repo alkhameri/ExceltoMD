@@ -1,0 +1,11 @@
+.excel-md { margin: 1.2em 0; }
+.excel-md-scroll { overflow-x: auto; max-width: 100%; border: 1px solid var(--vscode-panel-border, #8885); border-radius: 5px; }
+.excel-md-scroll:focus-visible { outline: 2px solid var(--vscode-focusBorder, #007acc); outline-offset: 2px; }
+.excel-md-table { border-collapse: collapse; width: max-content; min-width: 100%; margin: 0 !important; font-size: 0.95em; }
+.excel-md-table caption { text-align: left; padding: 0.7em 0.9em; color: var(--vscode-descriptionForeground); font-size: 0.9em; }
+.excel-md-table th, .excel-md-table td { padding: 0.45em 0.8em; vertical-align: top; white-space: pre-wrap; border: 1px solid var(--vscode-panel-border, #8885); }
+.excel-md-table th { text-align: left; background: var(--vscode-textCodeBlock-background, #8882); }
+.excel-md-table tr:nth-child(odd) td { background: var(--vscode-textCodeBlock-background, #8881); }
+.excel-md-error, .excel-md-notice { padding: 0.6em 0.9em; border-left: 3px solid var(--vscode-descriptionForeground, #888); background: var(--vscode-textCodeBlock-background, #8881); }
+.excel-md-error { border-color: var(--vscode-errorForeground, #d33); }
+.excel-md-notice { color: var(--vscode-descriptionForeground); font-size: 0.9em; }

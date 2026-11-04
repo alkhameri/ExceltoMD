@@ -1,0 +1,13 @@
+**/*
+!package.json
+!README.md
+!CHANGELOG.md
+!PUBLISHING.md
+!LICENSE
+!THIRD_PARTY_NOTICES.txt
+!dist/extension.js
+!dist/worker.js
+!media/preview.css
+!snippets/markdown.json
+!examples/MAD.md
+!examples/registers.xlsx

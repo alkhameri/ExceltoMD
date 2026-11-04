@@ -63,6 +63,8 @@ test('clouds and curves retain cubic, quadratic, elliptical and NURBS geometry',
   const nurbs=row('NURBSTo',{X:1,Y:0,A:1,B:1,C:0,D:1});nurbs.cells.E={F:'NURBS(1,3,1,1,0.25,1,0,1,0.75,1,0,1)'};
   const curve=geometryPath({rows:[row('MoveTo',{X:0,Y:0}),nurbs]},1,1);
   assert.ok(curve.split(' L ').length>20); assert.match(curve,/L 72 72$/);assert.doesNotMatch(curve,/NaN|Infinity/);
+  nurbs.cells.E={V:nurbs.cells.E.F,F:'Inh'};
+  assert.equal(geometryPath({rows:[row('MoveTo',{X:0,Y:0}),nurbs]},1,1),curve,'inherited NURBS use the cached formula value');
 });
 
 test('connectors keep explicit geometry, zero arrow settings and distinct arrowhead types',()=>{

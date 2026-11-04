@@ -52,7 +52,7 @@ function geometryPath(geometry, width, height) {
       const rotation=-Math.atan2(dy,dx)*180/Math.PI;
       commands.push(`M ${point(x+dx,y+dy)} A ${format(rx)} ${format(ry)} ${format(rotation)} 1 0 ${point(x-dx,y-dy)} A ${format(rx)} ${format(ry)} ${format(rotation)} 1 0 ${point(x+dx,y+dy)} Z`);
     } else if (type === 'NURBSTo') {
-      const formula = cells.E?.F || cells.E?.V || '';
+      const formula = /^NURBS\(/i.test(cells.E?.F||'') ? cells.E.F : cells.E?.V || '';
       const match = /^NURBS\(([^()]*)\)$/i.exec(formula.trim());
       if (!match) continue;
       const data = match[1].split(',').map(Number);
@@ -88,7 +88,8 @@ function geometryPath(geometry, width, height) {
       }
       commands.push(`L ${end}`);
     } else if (type === 'PolylineTo') {
-      const match=/^POLYLINE\(([^()]*)\)$/i.exec((cells.A?.F||cells.A?.V||'').trim());
+      const formula=/^POLYLINE\(/i.test(cells.A?.F||'')?cells.A.F:cells.A?.V||'';
+      const match=/^POLYLINE\(([^()]*)\)$/i.exec(formula.trim());
       if(match) {
         const data=match[1].split(',').map(Number);
         if(data.length<=4096 && data.every(Number.isFinite)) for(let i=2;i+1<data.length;i+=2) commands.push(`L ${point(data[i]*(data[0]===0?w:1),data[i+1]*(data[1]===0?h:1))}`);

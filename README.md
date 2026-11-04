@@ -1,39 +1,54 @@
 # Excel to Markdown Live
 
-Show Excel tables directly in VS Code's built-in Markdown preview. Save your register definitions in Excel and see the updated table in your microarchitecture specification without copying cells into Markdown.
+Show Excel tables and Visio diagrams directly in VS Code's built-in Markdown preview. Save your register definitions in Excel or your architecture drawing in Visio and see the updated content in your microarchitecture specification.
 
 Put this on its own line in `MAD.md`:
 
 ````markdown
-'''xls(registers.xlsx, 1)'''
+xls("registers.xlsx", "Registers", "Register map")
+
+visio("architecture.vsdx", "Page-1", 'CPU pipeline'){width: 900px}
 ````
 
-Open **Markdown: Open Preview to the Side**, edit `registers.xlsx` in Excel, and save. The table refreshes automatically after the file changes, including AutoSave writes. Changes that Excel has not saved are not visible yet.
+Open **Markdown: Open Preview to the Side**, edit the Excel or Visio file, and save. The preview refreshes automatically after the file changes, including AutoSave writes. Unsaved changes in the source application are not visible yet.
 
 ## Install
 
-Install [Excel to Markdown Live from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=YaseenAlkhameri.excel-to-markdown-live), or search for **Excel to Markdown Live** by **Yaseen Alkhameri** in VS Code's Extensions view. You can also install a downloaded `.vsix` using **Extensions: Install from VSIX…**. Requires VS Code 1.90 or later on Windows, macOS, or Linux. No Excel installation is needed to view saved workbooks.
+Install [Excel to Markdown Live from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=YaseenAlkhameri.excel-to-markdown-live), or search for **Excel to Markdown Live** by **Yaseen Alkhameri** in VS Code's Extensions view. You can also install a downloaded `.vsix` using **Extensions: Install from VSIX…**. Requires VS Code 1.90 or later on Windows, macOS, or Linux. No Excel or Visio installation is needed to view saved files.
 
 ## Syntax
 
-Sheet numbers start at **1** and follow workbook tab order. Paths are relative to the Markdown file. Put each directive on its own line.
+Use `xls("path", "Sheet name", "Display title")` for Excel and `visio("path.vsdx", "Page name", "Display title")` for Visio. Put each directive on its own line.
+
+| Argument | Meaning |
+| --- | --- |
+| First | File path, relative to the Markdown file. |
+| Second | Name of the source Excel sheet or Visio page. |
+| Third | Your own title, shown above the table or diagram. It does not rename the source sheet/page. |
+
+Single or double quotes work. Optional `{width: 900px}` sets the diagram or table viewport width; it shrinks to fit narrower previews. Widths must be integers from 1 to 10,000 pixels.
 
 ````markdown
-'''xls(registers.xlsx, 1)'''
+xls("register definitions.xlsx", "Registers", "Memory-mapped registers")
 
-'''xls("register definitions.xlsx", 2)'''
+visio("diagrams/cpu.vsdx", "Page-1", 'CPU architecture'){width: 900px}
 
-'''xls("data/registers.xlsx", "Bit Fields")'''
+'''xls("data/registers.xlsx", "Bit Fields", "Control fields")'''
 
-```xls(registers.xlsx, 1)
+```xls("registers.xlsx", "Registers", "Register map")
+```
+
+```visio("diagrams/cpu.vsdx", "Page-1", "CPU architecture"){width: 900px}
 ```
 ````
 
-Both the exact triple-apostrophe form and an empty Markdown code fence are supported. A single-line triple-backtick form also works. Quote filenames containing commas. A quoted second argument selects a sheet by name (case-insensitive); an unquoted positive integer selects by position. Keep paths inside the Markdown document's workspace folder. Without an open workspace folder, keep workbooks beside the Markdown file or in a subdirectory.
+Standalone lines, triple-apostrophe wrappers, single-line triple-backtick wrappers, and empty Markdown code fences are supported. Named sheets/pages match case-insensitively; Visio also accepts the page's universal name (`NameU`). Keep paths inside the Markdown document's workspace folder. Without an open workspace folder, keep source files beside the Markdown file or in a subdirectory.
 
-Type `xls` in a Markdown editor to insert the snippet. The command **Excel to Markdown: Refresh Tables** reloads all referenced workbooks if a filesystem notification is missed.
+Legacy two-argument Excel directives such as `'''xls(registers.xlsx, 1)'''` still work. An unquoted positive integer selects a sheet by position, starting at **1**. Without a third argument, the caption defaults to the filename and sheet name.
 
-## What renders
+Type `xls` or `visio` in a Markdown editor to insert a snippet. The command **Excel to Markdown: Refresh Tables and Diagrams** reloads all referenced files if a filesystem notification is missed.
+
+## Excel tables
 
 - `.xlsx`, `.xls`, `.xlsm`, and `.xlsb` workbooks, including multiple sheets and workbooks in one document.
 - The used cell range, with its first row as the column header.
@@ -43,22 +58,28 @@ Type `xls` in a Markdown editor to insert the snippet. The command **Excel to Ma
 
 This is a table preview, not a pixel-perfect copy of Excel. Charts, images, conditional formatting, fonts, cell colors, and macros are not rendered or executed. Hidden rows and columns are included. Password-protected workbooks are not supported. Other renderers, including GitHub, do not understand the custom directive. Markdown source is never rewritten.
 
+## Visio diagrams
+
+`.vsdx` pages render locally as SVG images with a caption above them. The renderer supports common shapes, text, connectors, groups, master shapes, colors, gradients, background pages, and supported embedded raster images. You can embed several pages or give the same page different captions in one document.
+
+Visio rendering is approximate. Complex ShapeSheet formulas, specialized stencils, advanced effects, and embedded objects may differ from Visio or be omitted. EMF, WMF, and TIFF pictures may not display; use PNG or JPEG for embedded pictures. Older `.vsd` files are not supported; save as `.vsdx` first. Diagrams retain the drawing's colors on a white canvas in either VS Code theme.
+
 ## Live updates and limits
 
-Workbooks are watched for creation, changes, deletion, and Excel's replace-on-save behavior. Events are coalesced over 200 ms; the preview then updates after the workbook is read. A one-second file-stat check catches saves when native filesystem notifications are missed. Parsing runs in background workers so the extension host stays responsive. Missing or damaged workbooks show errors and recover on the next save or manual refresh.
+Excel and Visio files are watched for creation, changes, deletion, and replace-on-save behavior. Events are coalesced over 200 ms; the preview then updates after the file is read. A one-second file-stat check catches saves when native filesystem notifications are missed. Parsing runs in background workers so the extension host stays responsive. Missing or damaged files show errors and recover on the next save or manual refresh.
 
 | Setting | Default | Maximum |
 | --- | ---: | ---: |
 | `excelToMarkdown.maxRows` | 1,000 | 10,000 |
 | `excelToMarkdown.maxColumns` | 64 | 256 |
 
-There is also a 50,000-cell limit per rendered table, a 32 MB workbook limit, and a 15-second limit per read. Truncated tables show a notice. At most 128 distinct workbook/sheet/settings combinations are cached; close unused Markdown documents to release them.
+There is also a 50,000-cell limit per rendered table, a 32 MB source-file limit, and a 15-second limit per read. Truncated tables show a notice. VSDX archives are limited to 64 MB expanded, 2,048 parts, 10,000 shapes per page, and 8 MB per rendered SVG image. At most 128 distinct source/sheet-or-page/title/settings combinations are cached; close unused Markdown documents to release them.
 
-Workbook content stays on your machine (or your remote VS Code extension host). There are no network requests or telemetry. Workbook content is escaped as text. Untrusted workspaces must be trusted before workbooks can be read. Files and symlinks outside the allowed workspace folder are rejected. Browser-only and virtual workspaces are not supported.
+Source content stays on your machine (or your remote VS Code extension host). There are no network requests or telemetry. Workbook content is escaped as text, and generated SVG is sanitized and embedded as an image. Untrusted workspaces must be trusted before files can be read. Files and symlinks outside the allowed workspace folder are rejected. Browser-only and virtual workspaces are not supported.
 
 ## Try the register example
 
-Open `examples/MAD.md` in the Markdown preview and edit `examples/registers.xlsx` in Excel. The first sheet is a register map; the second defines bit fields.
+Open `examples/MAD.md` in the Markdown preview and edit `examples/registers.xlsx` in Excel. The first sheet is a register map; the second defines bit fields. `examples/architecture.vsdx` contains the `Page-1` and `Control` diagram pages. Save either file to see the preview update.
 
 ## Develop
 
@@ -73,14 +94,14 @@ npm run package
 
 Press F5 in VS Code to launch an Extension Development Host, open `examples/MAD.md`, and open its built-in preview. After changing source, rebuild and reload the development host.
 
-Unit tests cover syntax, cell rendering, path restrictions, worker loading, cache invalidation, and file-watcher lifecycle. Integration tests launch an isolated VS Code instance and exercise the built-in Markdown renderer and real file events. Set `VSCODE_EXECUTABLE_PATH` to use an existing VS Code executable; otherwise the test runner downloads stable VS Code.
+Unit tests cover syntax, cell and diagram rendering, page relationships, SVG sanitization, path restrictions, worker loading, cache invalidation, and file-watcher lifecycle. Integration tests launch an isolated VS Code instance and exercise captions, named sheets/pages, and real file saves, replacements, deletion, and recovery for both formats. Set `VSCODE_EXECUTABLE_PATH` to use an existing VS Code executable; otherwise the test runner downloads stable VS Code.
 
 SheetJS is pinned to its official 0.20.3 distribution, rather than the outdated `xlsx` package on npm. Runtime code is bundled into the VSIX; users do not install Node.js or npm packages.
 
 ## Publish publicly
 
-The configured Marketplace publisher ID is `YaseenAlkhameri`, and the source repository is `alkhameri/ExceltoMD` on GitHub. Pushing a version tag such as `v0.1.1` runs the publishing workflow, which tests, builds, and publishes that version. The tag must match the version in `package.json`. See `PUBLISHING.md` for the one-time Trusted Publishing setup and release instructions.
+The configured Marketplace publisher ID is `YaseenAlkhameri`, and the source repository is `alkhameri/ExceltoMD` on GitHub. Pushing a version tag such as `v0.2.0` runs the publishing workflow, which tests, builds, and publishes that version. The tag must match the version in `package.json`. See `PUBLISHING.md` for the one-time Trusted Publishing setup and release instructions.
 
 ## License
 
-MIT. The bundled workbook reader is SheetJS Community Edition (Apache-2.0); its license is included in `THIRD_PARTY_NOTICES.txt`.
+MIT. The bundled workbook reader is SheetJS Community Edition (Apache-2.0). Visio rendering adapts Daniel Nylander's MIT-licensed [Visio Viewer renderer](https://github.com/yeager/visio-viewer-extension). Licenses for these components and all bundled runtime dependencies are included in `THIRD_PARTY_NOTICES.txt`.

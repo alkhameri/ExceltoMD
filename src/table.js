@@ -6,7 +6,7 @@ function renderTable(workbook, request) {
   const name = typeof selector === 'number' ? workbook.SheetNames[selector - 1] : workbook.SheetNames.find(name => name.toLowerCase() === selector.toLowerCase());
   if (!name || !workbook.Sheets[name]) throw new Error(`Sheet ${selector} was not found. Available sheets: ${workbook.SheetNames.map((name, i) => `${i + 1}: ${name}`).join(', ')}.`);
   const sheet = workbook.Sheets[name];
-  const caption = `${filename} — ${name}`;
+  const caption = request.title ?? `${filename} — ${name}`;
   if (!sheet['!ref']) return messageHtml(`${caption}: this sheet is empty.`, 'notice');
   const range = XLSX.utils.decode_range(sheet['!ref']);
   if (![range.s.r, range.s.c, range.e.r, range.e.c].every(Number.isSafeInteger) || range.e.r < range.s.r || range.e.c < range.s.c) throw new Error('The workbook has an invalid cell range.');
@@ -27,7 +27,8 @@ function renderTable(workbook, request) {
     }
   }
   let uncachedFormulas = false;
-  const html = [`<div class="excel-md-scroll" tabindex="0" role="region" aria-label="${escapeHtml(caption)}"><table class="excel-md-table"><caption>${escapeHtml(caption)}</caption><tbody>`];
+  const width = Number.isInteger(request.width) && request.width >= 1 && request.width <= 10000 ? ` style="width: ${request.width}px; max-width: 100%"` : '';
+  const html = [`<div class="excel-md-scroll"${width} tabindex="0" role="region" aria-label="${escapeHtml(caption)}"><table class="excel-md-table"><caption>${escapeHtml(caption)}</caption><tbody>`];
   for (let row = range.s.r; row <= endRow; row++) {
     html.push('<tr>');
     for (let col = range.s.c; col <= endColumn; col++) {

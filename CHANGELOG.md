@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0
+
+- Add `xls("path", "Sheet name", "Display title")` with a caption above the table.
+- Add live `visio("path.vsdx", "Page name", "Display title"){width: 900px}` diagrams, rendered locally from VSDX pages.
+- Accept standalone directives, empty code fences, and the existing single-line wrapped syntax. Keep legacy two-argument Excel directives working.
+- Support optional pixel widths, independent titles for repeated source sheets/pages, and automatic refresh after Excel or Visio saves.
+- Include Excel/Visio snippets and a two-page Visio example alongside the register workbook.
+- Bound Visio ZIP expansion and sanitize generated SVG images; test named pages, background pages, file recovery, and live updates in VS Code.
+
 ## 0.1.1
 
 - Link the extension to its GitHub source repository and public Marketplace listing.

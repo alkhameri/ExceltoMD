@@ -9,3 +9,7 @@
 .excel-md-error, .excel-md-notice { padding: 0.6em 0.9em; border-left: 3px solid var(--vscode-descriptionForeground, #888); background: var(--vscode-textCodeBlock-background, #8881); }
 .excel-md-error { border-color: var(--vscode-errorForeground, #d33); }
 .excel-md-notice { color: var(--vscode-descriptionForeground); font-size: 0.9em; }
+.excel-md-figure { margin: 1.2em 0; }
+.excel-md-figure figcaption { text-align: left; padding: 0.7em 0.9em; font-weight: 600; }
+.excel-md-diagram { overflow-x: auto; border: 1px solid var(--vscode-panel-border, #8885); border-radius: 5px; background: white; }
+.excel-md-visio { display: block; max-width: 100%; height: auto; }

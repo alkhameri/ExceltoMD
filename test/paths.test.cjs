@@ -25,3 +25,11 @@ test('rejects symlink escapes and files over the size limit', async t => {
   const file = path.join(root,'large.xlsx'); await fs.writeFile(file,''); await fs.truncate(file,33*1024*1024);
   await assert.rejects(verifyWorkbookPath(file,root),/32 MB/);
 });
+
+test('allows VSDX only for a Visio directive and preserves workspace boundaries',()=>{
+  const root=path.resolve('workspace'); const doc=path.join(root,'MAD.md');
+  assert.equal(resolveWorkbook('cpu.vsdx',doc,root,'visio'),path.join(root,'cpu.vsdx'));
+  assert.throws(()=>resolveWorkbook('cpu.vsdx',doc,root));
+  assert.throws(()=>resolveWorkbook('cpu.xlsx',doc,root,'visio'));
+  assert.throws(()=>resolveWorkbook('../cpu.vsdx',doc,root,'visio'));
+});

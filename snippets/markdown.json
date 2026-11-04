@@ -2,8 +2,15 @@
   "Live Excel table": {
     "prefix": "xls",
     "body": [
-      "'''xls(${1:registers.xlsx}, ${2:1})'''"
+      "xls(\"${1:registers.xlsx}\", \"${2:Registers}\", \"${3:Register map}\")"
     ],
-    "description": "Embed a live Excel table in the Markdown preview (1-based sheet number)."
+    "description": "Embed a live Excel table: file path, sheet name, display title."
+  },
+  "Live Visio diagram": {
+    "prefix": "visio",
+    "body": [
+      "visio(\"${1:architecture.vsdx}\", \"${2:Page-1}\", \"${3:CPU pipeline}\"){width: ${4:900}px}"
+    ],
+    "description": "Embed a live Visio page: file path, page name, display title, optional pixel width."
   }
 }

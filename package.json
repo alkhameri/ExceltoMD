@@ -1,8 +1,8 @@
 {
   "name": "excel-to-markdown-live",
   "displayName": "Excel to Markdown Live",
-  "description": "Live Excel tables in the built-in Markdown preview. Keep register specifications synchronized with saved workbooks.",
-  "version": "0.1.1",
+  "description": "Live Excel tables and Visio diagrams in the Markdown preview, with named sheets, pages, and custom captions.",
+  "version": "0.2.0",
   "publisher": "YaseenAlkhameri",
   "repository": {
     "type": "git",
@@ -23,6 +23,8 @@
     "excel",
     "xlsx",
     "xls",
+    "visio",
+    "vsdx",
     "markdown",
     "registers",
     "live preview"
@@ -37,11 +39,11 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Excel files are read only after the workspace is trusted."
+      "description": "Excel and Visio files are read only after the workspace is trusted."
     },
     "virtualWorkspaces": {
       "supported": false,
-      "description": "Workbooks must be available on the local or remote extension host filesystem."
+      "description": "Excel and Visio files must be available on the local or remote extension host filesystem."
     }
   },
   "contributes": {
@@ -52,7 +54,7 @@
     "commands": [
       {
         "command": "excelToMarkdown.refresh",
-        "title": "Excel to Markdown: Refresh Tables"
+        "title": "Excel to Markdown: Refresh Tables and Diagrams"
       }
     ],
     "snippets": [
@@ -98,6 +100,9 @@
     "markdown-it": "15.0.3"
   },
   "dependencies": {
+    "@xmldom/xmldom": "0.9.12",
+    "fflate": "0.8.3",
+    "jszip": "3.10.2",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "overrides": {

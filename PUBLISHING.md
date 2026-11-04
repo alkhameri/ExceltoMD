@@ -1,6 +1,6 @@
 # Publish Excel to Markdown Live
 
-The configured publisher ID is `YaseenAlkhameri`. Version `0.1.0` is already published at https://marketplace.visualstudio.com/items?itemName=YaseenAlkhameri.excel-to-markdown-live. Publishing updates requires access to that publisher or the Trusted Publishing policy below. No publisher credentials are stored in this repository.
+The configured publisher ID is `YaseenAlkhameri`. The extension is published at https://marketplace.visualstudio.com/items?itemName=YaseenAlkhameri.excel-to-markdown-live. Publishing updates requires access to that publisher or the Trusted Publishing policy below. No publisher credentials are stored in this repository.
 
 1. Sign in at https://marketplace.visualstudio.com/manage and confirm you have access to the publisher with ID `YaseenAlkhameri`. Create it first if it is not registered yet.
 2. Confirm the `publisher` field in `package.json` matches that ID. The repository and issue URLs point to `alkhameri/ExceltoMD`. Choose the final extension name before the first release.
@@ -24,11 +24,11 @@ In Marketplace, select publisher `YaseenAlkhameri`, then **Trusted Publishing â†
 
 For a private GitHub repository, run the workflow within 48 hours of creating the policy. Its first successful token exchange activates the policy permanently.
 
-After the policy is configured, publish an already-committed version that has not been published yet (for example, `0.1.1`):
+After the policy is configured, publish an already-committed version that has not been published yet (for example, `0.2.0`):
 
 ```sh
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 For later releases, commit the code and changelog changes, then run:
@@ -49,8 +49,9 @@ Official instructions: https://code.visualstudio.com/api/working-with-extensions
 ## Release checks
 
 - Run the unit/build and VS Code integration suites.
-- Verify the example updates after an Excel save or AutoSave.
-- Verify a missing workbook recovers when created, and a deleted workbook shows an error.
+- Verify captions, named sheets/pages, and widths in the register and Visio examples.
+- Verify the example updates after an Excel or Visio save or AutoSave.
+- Verify missing source files recover when created, and deleted files show an error.
 - Check dark/light preview themes and a wide register table.
 - Confirm the VSIX includes both bundles, CSS, snippets, README, changelog, example, and third-party license, with no credentials or development dependencies.
 - Confirm publisher identity, package version, and public listing after upload.

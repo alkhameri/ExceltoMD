@@ -47,3 +47,12 @@ test('removing directives releases old watchers without reloading retained table
   assert.equal(x.watchers.size,1); assert.equal(x.pending.length,2);
   x.service.renderDocument('doc',()=>{}); assert.equal(x.watchers.size,0);
 });
+
+test('keeps distinct captions and widths for the same source sheet',async t=>{
+  const x=setup(t);
+  const a={...request,title:'First'}; const b={...request,title:'Second',width:900};
+  x.service.get(a,'doc'); x.service.get(b,'doc'); await tick();
+  assert.equal(x.pending.length,2); assert.equal(x.watchers.size,1);
+  x.pending[0].resolve('First caption');x.pending[1].resolve('Second caption');await tick();
+  assert.equal(x.service.get(a,'doc'),'First caption');assert.equal(x.service.get(b,'doc'),'Second caption');
+});

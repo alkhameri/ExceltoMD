@@ -18,3 +18,7 @@ XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
 ]), 'Bit Fields');
 XLSX.writeFile(workbook, path.join(__dirname, '../examples/registers.xlsx'));
 console.log('Created examples/registers.xlsx');
+require('./vsdx-fixture.cjs').drawingBytes().then(bytes => {
+  require('node:fs').writeFileSync(path.join(__dirname, '../examples/architecture.vsdx'), bytes);
+  console.log('Created examples/architecture.vsdx');
+}).catch(error => { console.error(error); process.exitCode = 1; });

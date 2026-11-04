@@ -43,3 +43,18 @@ test('invalid syntax and render failures become escaped messages', () => {
   const html = md.render("'''xls(a.xlsx,1)'''");
   assert.match(html, /&lt;script&gt;/); assert.doesNotMatch(html, /<script>/);
 });
+
+test('parses distinct source names and captions with either quote style',()=>{
+  assert.deepEqual(parseDirective('xls("registers.xlsx", "Registers", "Register map")'),{filename:'registers.xlsx',sheet:'Registers',title:'Register map'});
+  assert.deepEqual(parseDirective('visio("cpu.vsdx", "Page-1", \'CPU pipeline\'){width: 900px}'),{filename:'cpu.vsdx',sheet:'Page-1',title:'CPU pipeline',kind:'visio',width:900});
+  assert.equal(parseDirective(String.raw`xls("data, (v2).xlsx", "Sheet1", "The \"main\" table")`).title,'The "main" table');
+});
+test('rejects unquoted captions and unsafe or unsupported width attributes',()=>{
+  for(const source of ['xls("f.xlsx","Sheet1",title)','visio("f.vsdx",1,"Title")','visio("f.vsdx","Page-1","")','visio("f.vsdx","Page-1","Title"){width:0px}','visio("f.vsdx","Page-1","Title"){width:10001px}','visio("f.vsdx","Page-1","Title"){width:900px; color:red}','xls("f.xlsx","Sheet1","Title"){width:expression(bad)}']) assert.throws(()=>parseDirective(source),undefined,source);
+});
+test('renders bare directives and fenced directives with titles and width',()=>{
+  const seen=[]; const md=extendMarkdown(new MarkdownIt(),request=>{seen.push(request);return '<figure></figure>';});
+  md.render('xls("f.xlsx", "Sheet1", "Table")\n\nvisio("d.vsdx", "Page-1", \'Diagram\'){width: 900px}\n\n```xls("f.xlsx", "Sheet1", "Fenced table")\n```\n\n```visio("d.vsdx", "Page-1", "Fenced diagram"){width: 600px}\n```\n\n```visio("d.vsdx", "Page-1", "Single line")```{width: 700px}\n');
+  assert.deepEqual(seen.map(item=>item.title),['Table','Diagram','Fenced table','Fenced diagram','Single line']);
+  assert.deepEqual(seen.map(item=>item.width),[undefined,900,undefined,600,700]);
+});

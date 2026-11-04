@@ -5,11 +5,13 @@ function isWithin(root, filename) {
   const relative = path.relative(root, filename);
   return relative === '' || (!path.isAbsolute(relative) && relative !== '..' && !relative.startsWith('..' + path.sep));
 }
-function resolveWorkbook(filename, documentPath, root) {
+function resolveWorkbook(filename, documentPath, root, kind = 'xls') {
   if (!documentPath) throw new Error('Save this Markdown document before embedding an Excel workbook.');
   if (/^[a-z][a-z\d+.-]*:/i.test(filename) && !/^[a-z]:[\\/]/i.test(filename)) throw new Error('Use a filesystem path, not a URL.');
   const file = path.resolve(path.dirname(documentPath), filename.replace(/\\/g, '/'));
-  if (!/\.(xlsx|xls|xlsm|xlsb)$/i.test(file)) throw new Error('Supported workbook extensions: .xlsx, .xls, .xlsm, .xlsb.');
+  if (kind === 'visio') {
+    if (!/\.vsdx$/i.test(file)) throw new Error('Use a .vsdx drawing with visio(...).');
+  } else if (!/\.(xlsx|xls|xlsm|xlsb)$/i.test(file)) throw new Error('Supported workbook extensions: .xlsx, .xls, .xlsm, .xlsb.');
   if (!isWithin(root, file)) throw new Error('The workbook must be inside this Markdown document’s workspace folder (or its directory when no folder is open).');
   return file;
 }

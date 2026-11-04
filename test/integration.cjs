@@ -4,6 +4,8 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const XLSX = require('xlsx');
 const manifest = require('../package.json');
+const {drawingBytes} = require('../scripts/vsdx-fixture.cjs');
+const drawingText = html => [...html.matchAll(/src="data:image\/svg\+xml;base64,([^"]+)"/g)].map(match => Buffer.from(match[1], 'base64').toString()).join('\n');
 const delay = ms => new Promise(resolve=>setTimeout(resolve,ms));
 const normalizePath = filename => process.platform === 'win32' ? path.resolve(filename).toLowerCase() : path.resolve(filename);
 async function until(check,label) {
@@ -20,8 +22,17 @@ function bytes(value,bookType='xlsx') {
 exports.run=async()=>{
   const root=process.env.EXCEL_TEST_WORKSPACE;
   const workbook=path.join(root,'registers.xlsx'); const markdown=path.join(root,'MAD.md');
+  const drawing=path.join(root,'architecture.vsdx');
   await fs.writeFile(workbook,bytes('INITIAL'));
-  const source="# Register specification\n\n'''xls(registers.xlsx, 1)'''\n\n'''xls(registers.xlsx, 2)'''\n";
+  await fs.writeFile(drawing,await drawingBytes());
+  const source=[
+    '# Register specification',
+    'xls("registers.xlsx", "Registers", "Register map")',
+    '```xls("registers.xlsx", "Registers", "Control registers")\n```',
+    "'''xls(registers.xlsx, 2)'''",
+    'visio("architecture.vsdx", "Page-1", \'CPU pipeline\'){width: 900px}',
+    '```visio("architecture.vsdx", "Control", "Control diagram")\n```'
+  ].join('\n\n')+'\n';
   await fs.writeFile(markdown,source);
   const extension=vscode.extensions.getExtension(`${manifest.publisher}.${manifest.name}`);
   assert.ok(extension,'Development extension is installed');
@@ -30,13 +41,15 @@ exports.run=async()=>{
   const originalExtend=api.extendMarkdownIt;
   api.extendMarkdownIt=md=>{
     originalExtend(md);
-    const rule=md.renderer.rules.excel_workbook;
-    md.renderer.rules.excel_workbook=(...args)=>{
-      const html=rule(...args);
-      const renderedPath = args[3]?.currentDocument?.fsPath;
-      if(renderedPath && normalizePath(renderedPath) === normalizePath(markdown)) frames.push(html);
-      return html;
-    };
+    for (const name of ['excel_workbook','fence']) {
+      const rule=md.renderer.rules[name];
+      md.renderer.rules[name]=(...args)=>{
+        const html=rule(...args);
+        const renderedPath = args[3]?.currentDocument?.fsPath;
+        if(renderedPath && normalizePath(renderedPath) === normalizePath(markdown)) frames.push(html);
+        return html;
+      };
+    }
     return md;
   };
   await vscode.extensions.getExtension('vscode.markdown-language-features').activate();
@@ -45,6 +58,8 @@ exports.run=async()=>{
   await vscode.window.showTextDocument(document);
   await vscode.commands.executeCommand('markdown.showPreviewToSide',document.uri);
   await until(()=>frames.some(html=>html.includes('INITIAL')) && frames.some(html=>html.includes('ENABLE')),'built-in preview renders both workbook sheets');
+  await until(()=>frames.some(html=>html.includes('<caption>Register map</caption>')) && frames.some(html=>html.includes('<caption>Control registers</caption>')),'bare and fenced directives give the same sheet independent titles');
+  await until(()=>frames.some(html=>drawingText(html).includes('Fetch') && html.includes('<figcaption>CPU pipeline</figcaption>') && html.includes('width: 900px')) && frames.some(html=>drawingText(html).includes('Register bank')),'built-in preview renders both named Visio pages with captions and sizing');
   // No render or refresh commands after these writes: only the filesystem watcher can trigger the preview.
   let cursor=frames.length;
   await fs.writeFile(workbook,bytes('SAVED_42'));
@@ -56,6 +71,15 @@ exports.run=async()=>{
   await until(()=>frames.slice(cursor).some(html=>html.includes('Workbook not found')),'deleting the workbook clears stale values and displays an error');
   cursor=frames.length; await fs.writeFile(workbook,bytes('RECOVERED_7'));
   await until(()=>frames.slice(cursor).some(html=>html.includes('RECOVERED_7')),'recreating the workbook automatically recovers');
+  cursor=frames.length; await fs.writeFile(drawing,await drawingBytes({label:'FETCH_SAVED'}));
+  await until(()=>frames.slice(cursor).some(html=>drawingText(html).includes('FETCH_SAVED')),'a Visio save automatically refreshes the visible preview');
+  cursor=frames.length;
+  const drawingReplacement=path.join(root,'visio-save.tmp'); await fs.writeFile(drawingReplacement,await drawingBytes({label:'FETCH_ATOMIC'})); await fs.rename(drawingReplacement,drawing);
+  await until(()=>frames.slice(cursor).some(html=>drawingText(html).includes('FETCH_ATOMIC')),'an atomic Visio replacement refreshes the preview');
+  cursor=frames.length; await fs.unlink(drawing);
+  await until(()=>frames.slice(cursor).some(html=>html.includes('Visio drawing not found')),'deleting the drawing clears stale diagrams');
+  cursor=frames.length; await fs.writeFile(drawing,await drawingBytes({label:'FETCH_RECOVERED'}));
+  await until(()=>frames.slice(cursor).some(html=>drawingText(html).includes('FETCH_RECOVERED')),'recreating the drawing automatically recovers');
   assert.equal(await fs.readFile(markdown,'utf8'),source,'Markdown source remains unchanged');
   assert.equal(document.isDirty,false);
   // Resolve each document independently even when another editor is active.

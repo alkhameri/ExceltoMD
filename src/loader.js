@@ -1,6 +1,6 @@
 'use strict';
 const {Worker} = require('node:worker_threads');
-// Parse workbooks off the extension host, with at most two concurrent workers.
+// Parse source files off the extension host, with at most two concurrent workers.
 class WorkbookLoader {
   constructor(workerPath) { this.workerPath = workerPath; this.queue = []; this.active = new Set(); this.disposed = false; }
   load(request, signal) {
@@ -35,10 +35,10 @@ class WorkbookLoader {
       };
       try {
         worker = new Worker(this.workerPath, {workerData: job.request, resourceLimits: {maxOldGenerationSizeMb: 256, maxYoungGenerationSizeMb: 32}});
-        timer = setTimeout(() => job.finish(new Error('The workbook took too long to load (15-second limit). Try a smaller workbook.')), 15000);
+        timer = setTimeout(() => job.finish(new Error('The file took too long to load (15-second limit). Try a smaller workbook or drawing.')), 15000);
         worker.once('message', result => job.finish(result.error ? new Error(result.error) : null, result.html));
         worker.once('error', error => job.finish(error));
-        worker.once('exit', code => { if (!finished) job.finish(new Error(`The workbook reader stopped unexpectedly (code ${code}).`)); });
+        worker.once('exit', code => { if (!finished) job.finish(new Error(`The file reader stopped unexpectedly (code ${code}).`)); });
       } catch (error) { job.finish(error); }
     }
   }

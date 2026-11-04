@@ -39,10 +39,10 @@ function activate(context) {
   return {
     extendMarkdownIt(md) {
       extendMarkdown(md, (directive, uri) => {
-        if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace to render Excel workbooks.');
-        if (!uri || !['file', 'vscode-remote'].includes(uri.scheme)) throw new Error('Save this Markdown document to a filesystem workspace before embedding Excel.');
+        if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace to render Excel and Visio files.');
+        if (!uri || !['file', 'vscode-remote'].includes(uri.scheme)) throw new Error('Save this Markdown document to a filesystem workspace before embedding Excel or Visio.');
         const root = vscode.workspace.getWorkspaceFolder(uri)?.uri.fsPath ?? path.dirname(uri.fsPath);
-        const file = resolveWorkbook(directive.filename, uri.fsPath, root);
+        const file = resolveWorkbook(directive.filename, uri.fsPath, root, directive.kind);
         const config = vscode.workspace.getConfiguration('excelToMarkdown', uri);
         return service.get({...directive, file, root, maxRows: config.get('maxRows', 1000), maxColumns: config.get('maxColumns', 64)}, uri.toString());
       });

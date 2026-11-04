@@ -33,3 +33,11 @@ test('aborts queued and active workers without hanging',async t=>{
   const results=Promise.allSettled(pending); controller.abort();
   assert.ok((await results).every(result=>result.status==='rejected')); assert.equal(f.loader.active.size,0); assert.equal(f.loader.queue.length,0);
 });
+
+test('renders Visio pages in the same bounded background worker',async t=>{
+  const f=await fixture(t); const {drawingBytes}=require('../scripts/vsdx-fixture.cjs');
+  await fs.writeFile(path.join(f.root,'cpu.vsdx'),await drawingBytes());
+  const html=await f.loader.load({file:path.join(f.root,'cpu.vsdx'),root:f.root,filename:'cpu.vsdx',kind:'visio',sheet:'Control',title:'Control diagram',width:900},new AbortController().signal);
+  assert.match(html,/<figcaption>Control diagram/); assert.match(html,/data:image\/svg\+xml;base64,/);
+  const svg=Buffer.from(html.match(/base64,([^"]+)/)[1],'base64').toString(); assert.match(svg,/Register bank/);
+});

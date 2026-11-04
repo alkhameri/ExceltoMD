@@ -51,3 +51,9 @@ test('starts at the used range, including sheets offset from A1', () => {
   const html = renderTable(wb,request);
   assert.equal((html.match(/<tr>/g)||[]).length,2); assert.match(html, /Enable/);
 });
+
+test('uses the third argument as the visible caption without changing the selected sheet',()=>{
+  const wb=book([['Register'],['CTRL']]);
+  const html=renderTable(wb,{...request,sheet:'Registers',title:'Register <map>'});
+  assert.match(html,/<caption>Register &lt;map&gt;<\/caption>/); assert.match(html,/CTRL/); assert.doesNotMatch(html,/<caption>registers.xlsx/);
+});

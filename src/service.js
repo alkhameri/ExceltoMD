@@ -1,5 +1,7 @@
 'use strict';
 const {messageHtml} = require('./html');
+// Bound retained render results across active Markdown previews.
+const MAX_CACHED_RENDERS = 512;
 class WorkbookService {
   constructor({load, watch, onChange, debounceMs = 200}) {
     this.load = load; this.watch = watch; this.onChange = onChange; this.debounceMs = debounceMs;
@@ -10,7 +12,7 @@ class WorkbookService {
     const key = JSON.stringify([request.file, request.root, request.kind, request.filename, request.sheet, request.title, request.width, request.markdown !== false, request.maxRows, request.maxColumns]);
     let entry = this.entries.get(key);
     if (!entry) {
-      if (this.entries.size >= 128) return messageHtml('Too many workbook tables are open (128 maximum). Close unused Markdown documents.');
+      if (this.entries.size >= MAX_CACHED_RENDERS) return messageHtml(`Too many tables and diagrams are open (${MAX_CACHED_RENDERS} maximum across Markdown previews). Close unused Markdown documents.`);
       entry = {key, request, documents: new Set(), generation: 0};
       this.entries.set(key, entry);
       let file = this.files.get(request.file);

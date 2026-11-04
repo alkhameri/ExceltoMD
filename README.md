@@ -85,7 +85,7 @@ Excel and Visio files are watched for creation, changes, deletion, and replace-o
 | `excelToMarkdown.maxRows` | 1,000 | 10,000 |
 | `excelToMarkdown.maxColumns` | 64 | 256 |
 
-There is also a 50,000-cell limit per rendered table, a 32 MB source-file limit, and a 15-second limit per read. Truncated tables show a notice. VSDX archives are limited to 64 MB expanded, 2,048 parts, 10,000 shapes per page, 20,000 shapes after master expansion, 64 nested groups, and 8 MB per rendered SVG image. At most 128 distinct source/sheet-or-page/title/settings combinations are cached; close unused Markdown documents to release them.
+There is also a 50,000-cell limit per rendered table, a 32 MB source-file limit, and a 15-second limit per read. Truncated tables show a notice. VSDX archives are limited to 64 MB expanded, 2,048 parts, 10,000 shapes per page, 20,000 shapes after master expansion, 64 nested groups, and 8 MB per rendered SVG image. At most 512 distinct source/sheet-or-page/title/settings combinations are cached across active Markdown previews. This bounds retained render results and file watchers; closing unused Markdown documents releases their entries. Source files share a watcher, and at most two files are parsed concurrently.
 
 Source content stays on your machine (or your remote VS Code extension host). The extension makes no network requests and has no telemetry. Workbook Markdown disables HTML, images, and unsafe link protocols; `nmd` escapes all cell content as text. Generated SVG is sanitized and embedded as an image. Untrusted workspaces must be trusted before files can be read. Files and symlinks outside the allowed workspace folder are rejected. Browser-only and virtual workspaces are not supported.
 

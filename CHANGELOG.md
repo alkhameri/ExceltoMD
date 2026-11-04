@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- Raise the shared cache limit from 128 to 512 live tables and diagrams so large register specifications can render beyond the old cap.
+- Clarify that the limit applies across active Markdown previews. Keep shared file watchers and two concurrent parsing workers.
+
 ## 0.3.0
 
 - Render Markdown in Excel cells by default, including strikethrough, emphasis, links, lists, and code. Add `xls("path", "Sheet", "Title", nmd)` for literal cell text, with separate live caches for each mode.

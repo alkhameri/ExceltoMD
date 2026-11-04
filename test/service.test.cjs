@@ -70,3 +70,34 @@ test('caches Markdown and nmd views independently and refreshes both on save',as
   assert.equal(x.service.get(request,'doc'),'<s>new</s>');
   assert.equal(x.service.get(plain,'doc'),'~~new~~');
 });
+
+test('loads and refreshes 512 tables, bounds overflow, and releases capacity',async t=>{
+  const x=setup(t);
+  const requests=Array.from({length:512},(_,index)=>({...request,sheet:index+1}));
+  x.service.renderDocument('large-spec',()=>{
+    for(const req of requests) assert.match(x.service.get(req,'large-spec'),/Loading/);
+  });
+  await tick();
+  assert.equal(x.pending.length,512); assert.equal(x.watchers.size,1);
+  x.pending.forEach((load,index)=>load.resolve(`<table>Initial ${index+1}</table>`));
+  await tick();
+  x.service.renderDocument('large-spec',()=>{
+    requests.forEach((req,index)=>assert.equal(x.service.get(req,'large-spec'),`<table>Initial ${index+1}</table>`));
+  });
+  const overflow={...request,sheet:513};
+  assert.match(x.service.get(overflow,'other-spec'),/512 maximum across Markdown previews/);
+  await tick(); assert.equal(x.pending.length,512);
+
+  x.watchers.get(request.file)(); await delay(20); await tick();
+  assert.equal(x.pending.length,1024);
+  x.pending.slice(512).forEach((load,index)=>load.resolve(`<table>Updated ${index+1}</table>`));
+  await tick();
+  requests.forEach((req,index)=>assert.equal(x.service.get(req,'large-spec'),`<table>Updated ${index+1}</table>`));
+
+  x.service.renderDocument('large-spec',()=>{});
+  assert.equal(x.watchers.size,0); assert.equal(x.disposals,1);
+  assert.match(x.service.get(overflow,'other-spec'),/Loading/);
+  await tick(); assert.equal(x.pending.length,1025);
+  x.pending.at(-1).resolve('<table>Previously blocked</table>'); await tick();
+  assert.equal(x.service.get(overflow,'other-spec'),'<table>Previously blocked</table>');
+});

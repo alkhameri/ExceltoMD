@@ -5,6 +5,7 @@
 - Link the extension to its GitHub source repository and public Marketplace listing.
 - Automate version-tag releases with GitHub Actions and Marketplace Trusted Publishing.
 - Validate release tags against the package version before publishing.
+- Recover missed filesystem notifications with a one-second check of referenced workbooks.
 
 ## 0.1.0
 

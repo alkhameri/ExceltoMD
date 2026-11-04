@@ -45,7 +45,7 @@ This is a table preview, not a pixel-perfect copy of Excel. Charts, images, cond
 
 ## Live updates and limits
 
-Workbooks are watched for creation, changes, deletion, and Excel's replace-on-save behavior. Events are coalesced over 200 ms; the preview then updates after the workbook is read. Parsing runs in background workers so the extension host stays responsive. Missing or damaged workbooks show errors and recover on the next save or manual refresh.
+Workbooks are watched for creation, changes, deletion, and Excel's replace-on-save behavior. Events are coalesced over 200 ms; the preview then updates after the workbook is read. A one-second file-stat check catches saves when native filesystem notifications are missed. Parsing runs in background workers so the extension host stays responsive. Missing or damaged workbooks show errors and recover on the next save or manual refresh.
 
 | Setting | Default | Maximum |
 | --- | ---: | ---: |

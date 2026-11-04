@@ -5,6 +5,7 @@ const {extendMarkdown} = require('./markdown');
 const {resolveWorkbook} = require('./paths');
 const {WorkbookService} = require('./service');
 const {WorkbookLoader} = require('./loader');
+const {pollWorkbook} = require('./watch');
 function activate(context) {
   const output = vscode.window.createOutputChannel('Excel to Markdown');
   let refreshTimer;
@@ -25,7 +26,7 @@ function activate(context) {
       const normalize = value => process.platform === 'win32' ? path.resolve(value).toLowerCase() : path.resolve(value);
       const handle = uri => { if (normalize(uri.fsPath) === normalize(filename)) changed(); };
       watcher.onDidChange(handle); watcher.onDidCreate(handle); watcher.onDidDelete(handle);
-      return watcher;
+      return vscode.Disposable.from(watcher, pollWorkbook(filename, changed));
     }
   });
   context.subscriptions.push(output, service, loader,

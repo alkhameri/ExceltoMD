@@ -13,6 +13,6 @@ async function main() {
       extensionTestsEnv: {EXCEL_TEST_WORKSPACE:workspace},
       launchArgs: [workspace,'--disable-extensions','--disable-workspace-trust','--skip-welcome','--skip-release-notes','--user-data-dir',path.join(temporary,'user-data'),'--extensions-dir',path.join(temporary,'extensions')]
     });
-  } finally { await fs.rm(temporary,{recursive:true,force:true}); }
+  } finally { await fs.rm(temporary,{recursive:true,force:true,maxRetries:10,retryDelay:100}); }
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

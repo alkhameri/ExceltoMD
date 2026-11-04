@@ -5,6 +5,7 @@ const path = require('node:path');
 const XLSX = require('xlsx');
 const manifest = require('../package.json');
 const delay = ms => new Promise(resolve=>setTimeout(resolve,ms));
+const normalizePath = filename => process.platform === 'win32' ? path.resolve(filename).toLowerCase() : path.resolve(filename);
 async function until(check,label) {
   const deadline=Date.now()+20000;
   while(Date.now()<deadline) { if(await check()) { console.log('PASS: '+label);return; } await delay(100); }
@@ -32,7 +33,8 @@ exports.run=async()=>{
     const rule=md.renderer.rules.excel_workbook;
     md.renderer.rules.excel_workbook=(...args)=>{
       const html=rule(...args);
-      if(args[3]?.currentDocument?.fsPath===markdown) frames.push(html);
+      const renderedPath = args[3]?.currentDocument?.fsPath;
+      if(renderedPath && normalizePath(renderedPath) === normalizePath(markdown)) frames.push(html);
       return html;
     };
     return md;

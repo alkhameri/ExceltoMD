@@ -45,6 +45,11 @@ test('sanitizes generated SVG to remove scripts, external URLs and embedded HTML
   assert.doesNotMatch(svg,/script|foreignObject|onload|onclick|example.invalid/);
   assert.match(svg,/Safe text/); assert.match(svg,/url\(#gradient\)/);
 });
+test('preserves safe SVG styles while rejecting active CSS and external paint URLs',()=>{
+  const svg=sanitizeSvg('<svg xmlns="http://www.w3.org/2000/svg"><path fill="#000" style="fill:#fff;stroke:#123456;stroke-width:2;filter:url(https://example.invalid/f);cursor:url(https://example.invalid/c)"/><text style="font-size:12px;fill:expression(bad())">Label</text></svg>');
+  assert.match(svg,/fill="#fff"/);assert.match(svg,/stroke="#123456"/);assert.match(svg,/font-size="12px"/);
+  assert.doesNotMatch(svg,/style=|example.invalid|expression|cursor=/);
+});
 test('composes a referenced background page and rejects background cycles',async()=>{
   const background=await drawingBytes({customize:async zip=>{
     const pages=await zip.file('visio/pages/pages.xml').async('string');

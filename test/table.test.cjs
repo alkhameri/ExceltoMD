@@ -57,3 +57,18 @@ test('uses the third argument as the visible caption without changing the select
   const html=renderTable(wb,{...request,sheet:'Registers',title:'Register <map>'});
   assert.match(html,/<caption>Register &lt;map&gt;<\/caption>/); assert.match(html,/CTRL/); assert.doesNotMatch(html,/<caption>registers.xlsx/);
 });
+test('renders Markdown in headers and cells by default, including blocks',()=>{
+  const wb=book([['**Register**','Description'],['~~OLD_CTRL~~','**Enable** *mask* and `CTRL_REG`'],['[spec](https://example.com/spec)','- First\n- Second'],['Code','```verilog\nassign x = a & b;\n```']]);
+  const html=renderTable(wb,request);
+  for(const pattern of [/<th scope="col"><strong>Register<\/strong>/,/<s>OLD_CTRL<\/s>/,/<strong>Enable<\/strong> <em>mask<\/em>/,/<code>CTRL_REG<\/code>/,/<a href="https:\/\/example.com\/spec">spec<\/a>/,/<ul>\n<li>First<\/li>\n<li>Second<\/li>/,/<pre><code class="language-verilog">assign x = a &amp; b;/]) assert.match(html,pattern);
+});
+test('nmd renders all cell Markdown literally while preserving line breaks and escaping HTML',()=>{
+  const html=renderTable(book([['**Register**'],['~~OLD_CTRL~~\n**new** <script>bad()</script>']]),{...request,markdown:false});
+  assert.match(html,/>\*\*Register\*\*</); assert.match(html,/~~OLD_CTRL~~<br>\*\*new\*\* &lt;script&gt;/);
+  assert.doesNotMatch(html,/<s>|<strong>|<script>|excel-md-markdown/);
+});
+test('Markdown cells reject active URLs, raw HTML and automatic image requests',()=>{
+  const html=renderTable(book([['Text'],['[run](javascript:alert%281%29) [cmd](command:workbench.action.closeWindow) [file](file:///etc/passwd)'],['![remote](https://example.invalid/tracker.png) <img src="https://example.invalid/pixel">'],['<iframe src="https://example.invalid"></iframe> <script>bad()</script>']]),request);
+  assert.doesNotMatch(html,/<img|<script|<iframe|href="(?:javascript|command|file):/i);
+  assert.match(html,/&lt;img/);
+});

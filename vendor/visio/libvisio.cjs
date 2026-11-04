@@ -388,6 +388,7 @@ class VisioConverter {
     parseSingleShape(shapeElem) {
         const sd = {
             id: shapeElem.getAttribute("ID") || "",
+            deleted: shapeElem.getAttribute("Del") === "1",
             name: shapeElem.getAttribute("Name") || "",
             name_u: shapeElem.getAttribute("NameU") || "",
             type: shapeElem.getAttribute("Type") || "Shape",
@@ -484,7 +485,7 @@ class VisioConverter {
                     }
                     sd.para_formats[rowIx] = fmt;
                 }
-            } else if (secName === "FillGradientDef") {
+            } else if ((secName === "FillGradientDef" || secName === "FillGradient")) {
                 const gradStops = [];
                 const rows = this.querySelectorAll(section, "Row");
                 for (const row of rows) {
@@ -506,7 +507,7 @@ class VisioConverter {
         }
         
         // Parse text
-        const textElem = this.querySelector(shapeElem, "Text");
+        const textElem = this.getDirectChildren(shapeElem, "Text")[0];
         if (textElem) {
             sd.text = (textElem.textContent || textElem.innerText || "").trim();
             sd.text_parts = this.parseTextElement(textElem);
@@ -514,9 +515,9 @@ class VisioConverter {
         }
         
         // Parse sub-shapes (groups)
-        const shapesContainer = this.querySelector(shapeElem, "Shapes");
+        const shapesContainer = this.getDirectChildren(shapeElem, "Shapes")[0];
         if (shapesContainer) {
-            const subShapes = this.querySelectorAll(shapesContainer, "Shape");
+            const subShapes = this.getDirectChildren(shapesContainer, "Shape");
             for (const subShape of subShapes) {
                 sd.sub_shapes.push(this.parseSingleShape(subShape));
             }
@@ -556,23 +557,24 @@ class VisioConverter {
      * Parse geometry section
      */
     parseGeometrySection(section) {
-        const geo = { rows: [], no_fill: false, no_line: false, no_show: false };
+        const geo = { rows: [], flags: {}, deleted: section.getAttribute("Del") === "1" };
         
         // Check section-level cells
         const sectionCells = this.getDirectChildren(section, "Cell");
         for (const cell of sectionCells) {
             const n = cell.getAttribute("N");
             const v = cell.getAttribute("V") || "0";
-            if (n === "NoFill" && v === "1") geo.no_fill = true;
-            else if (n === "NoLine" && v === "1") geo.no_line = true;
-            else if (n === "NoShow" && v === "1") geo.no_show = true;
+            geo.flags[n] = v;
+            if (n === "NoFill") geo.no_fill = v === "1";
+            if (n === "NoLine") geo.no_line = v === "1";
+            if (n === "NoShow") geo.no_show = v === "1";
         }
         
         const rows = this.querySelectorAll(section, "Row");
         for (const row of rows) {
             const rowType = row.getAttribute("T") || "";
             const rowIx = row.getAttribute("IX") || "";
-            const rowData = { type: rowType, cells: {}, ix: rowIx };
+            const rowData = { type: rowType, cells: {}, ix: rowIx, deleted: row.getAttribute("Del") === "1" };
             
             const cells = this.querySelectorAll(row, "Cell");
             for (const cell of cells) {
@@ -630,7 +632,7 @@ class VisioConverter {
      * Parse ForeignData element
      */
     parseForeignData(shapeElem) {
-        const fd = this.querySelector(shapeElem, "ForeignData");
+        const fd = this.getDirectChildren(shapeElem, "ForeignData")[0];
         if (!fd) return null;
         
         const info = {
@@ -844,7 +846,7 @@ class VisioConverter {
         const shapesContainer = this.querySelector(doc, "Shapes");
         if (!shapesContainer) return shapes;
         
-        const shapeNodes = this.querySelectorAll(shapesContainer, "Shape");
+        const shapeNodes = this.getDirectChildren(shapesContainer, "Shape");
         for (const node of shapeNodes) {
             // Only get direct children of Shapes container
             if (node.parentNode === shapesContainer) {
@@ -995,7 +997,7 @@ class VisioConverter {
         ];
         
         // Sort shapes by z-order (containers first)
-        const sortedShapes = [...shapes].sort((a, b) => this.shapeZOrder(a) - this.shapeZOrder(b));
+        const sortedShapes = shapes;
         
         // Render shapes
         for (const s of sortedShapes) {
@@ -1005,20 +1007,10 @@ class VisioConverter {
             svgLines.push(...svgElements);
         }
         
-        // Render connections
-        if (connects && connects.length > 0) {
-            const shapeIndex = this.buildShapeIndex(shapes);
-            const connLines = this.renderConnectionsSvg(connects, shapeIndex, pageH);
-            svgLines.push(...connLines);
-        }
-        
-        // Text layer
-        if (textLayer.length > 0) {
-            svgLines.push('<!-- Text layer -->');
-            const processedText = this.avoidTextCollisions(textLayer);
-            svgLines.push(...processedText);
-        }
-        
+        // Text stays in source order and coordinates. Connect records describe
+        // glue relationships; they do not introduce additional connector shapes.
+        svgLines.push(...textLayer);
+
         svgLines.push('</svg>');
         
         // Build defs
@@ -1073,6 +1065,7 @@ class VisioConverter {
      * Render single shape to SVG elements
      */
     renderShapeToSvg(shape, pageH, usedMarkers, gradients, hasShadow, textLayer, pageRels) {
+        if (shape.deleted) return [];
         // Merge with master first
         shape = this.mergeShapeWithMaster(shape, this.masters);
         
@@ -1336,8 +1329,7 @@ class VisioConverter {
      */
     getShapeStyle(shape, gradients, hasShadow) {
         let lineWeight = this.getCellFloat(shape, "LineWeight", 0.01) * this.INCH_TO_PX;
-        if (lineWeight < 0.5) lineWeight = 1.5;
-        else if (lineWeight > 20) lineWeight = 20;
+        lineWeight = Math.max(0, lineWeight);
         
         let lineColor = this.resolveColor(this.getCellVal(shape, "LineColor")) || "#333333";
         let fillForegnd = this.resolveColor(this.getCellVal(shape, "FillForegnd"));
@@ -1366,17 +1358,6 @@ class VisioConverter {
         
         const lineTrans = this.getCellFloat(shape, "LineColorTrans");
         const strokeOpacity = lineTrans > 0 ? (lineTrans > 1 ? 1.0 - lineTrans / 100.0 : 1.0 - lineTrans) : 1.0;
-        
-        // Container styling
-        const isContainer = this.isContainer(shape);
-        if (isContainer) {
-            if (fill === "none" && !fillForegnd) {
-                fill = "#F8F8F8";
-                fillOpacity = 0.5;
-            } else if (fill !== "none" && fillOpacity > 0.9) {
-                fillOpacity = Math.max(0.3, fillOpacity * 0.5);
-            }
-        }
         
         // Apply shadows only when the source shape requests them.
         let shadowAttr = '';
@@ -1543,45 +1524,8 @@ class VisioConverter {
                 const x = this.safeFloat(cells.X?.V) * absW;
                 const y = this.safeFloat(cells.Y?.V) * absH;
                 dParts.push(`M ${(x * this.INCH_TO_PX).toFixed(2)} ${((absH - y) * this.INCH_TO_PX).toFixed(2)}`);
-                cx = x / absW; // Normalized for next operations
-                cy = y / absH;
+                cx = x; cy = y;
                 
-                // Detect oval pattern
-                const remaining = geo.rows.slice(rowIdx + 1);
-                const remainingTypes = remaining.map(r => r.type).filter(t => t);
-                if (remainingTypes.length >= 3 && remainingTypes.every(t => t === "ArcTo")) {
-                    const arcPoints = [[x, y]];
-                    for (const ar of remaining) {
-                        if (ar.type !== "ArcTo") break;
-                        const ax = this.safeFloat(ar.cells.X?.V) * sx;
-                        const ay = this.safeFloat(ar.cells.Y?.V) * sy;
-                        arcPoints.push([ax, ay]);
-                    }
-                    
-                    if (arcPoints.length >= 4) {
-                        const first = arcPoints[0];
-                        const last = arcPoints[arcPoints.length - 1];
-                        const dist = Math.sqrt((first[0] - last[0]) ** 2 + (first[1] - last[1]) ** 2);
-                        
-                        if (dist < 0.01) {
-                            const allX = arcPoints.map(p => p[0]);
-                            const allY = arcPoints.map(p => p[1]);
-                            const ecx = (Math.min(...allX) + Math.max(...allX)) / 2 * this.INCH_TO_PX;
-                            const ecy = (absH - (Math.min(...allY) + Math.max(...allY)) / 2) * this.INCH_TO_PX;
-                            const erx = (Math.max(...allX) - Math.min(...allX)) / 2 * this.INCH_TO_PX;
-                            const ery = (Math.max(...allY) - Math.min(...allY)) / 2 * this.INCH_TO_PX;
-                            
-                            if (erx > 0.5 && ery > 0.5) {
-                                dParts.length = 0;
-                                dParts.push(`M ${(ecx - erx).toFixed(2)} ${ecy.toFixed(2)}`);
-                                dParts.push(`A ${erx.toFixed(2)} ${ery.toFixed(2)} 0 1 0 ${(ecx + erx).toFixed(2)} ${ecy.toFixed(2)}`);
-                                dParts.push(`A ${erx.toFixed(2)} ${ery.toFixed(2)} 0 1 0 ${(ecx - erx).toFixed(2)} ${ecy.toFixed(2)}`);
-                                dParts.push("Z");
-                                break;
-                            }
-                        }
-                    }
-                }
             } else if (rt === "LineTo") {
                 const x = this.safeFloat(cells.X?.V) * sx;
                 const y = this.safeFloat(cells.Y?.V) * sy;
@@ -1592,8 +1536,7 @@ class VisioConverter {
                 const x = this.safeFloat(cells.X?.V) * absW;
                 const y = this.safeFloat(cells.Y?.V) * absH;
                 dParts.push(`L ${(x * this.INCH_TO_PX).toFixed(2)} ${((absH - y) * this.INCH_TO_PX).toFixed(2)}`);
-                cx = x / absW; // Normalized for next operations
-                cy = y / absH;
+                cx = x; cy = y;
             } else if (rt === "ArcTo") {
                 const x = this.safeFloat(cells.X?.V) * sx;
                 const y = this.safeFloat(cells.Y?.V) * sy;
@@ -1670,7 +1613,7 @@ class VisioConverter {
         const sagitta = Math.abs(bulge);
         const radius = (chord * chord / 4 + sagitta * sagitta) / (2 * sagitta);
         const maxRadius = chord * 5.0;
-        const finalRadius = Math.min(radius, maxRadius);
+        const finalRadius = radius;
         const radiusPx = finalRadius * this.INCH_TO_PX;
         
         const largeArc = sagitta > chord / 2 ? 1 : 0;
@@ -2731,16 +2674,9 @@ class VisioConverter {
             let imgWPx = imgW * this.INCH_TO_PX;
             let imgHPx = imgH * this.INCH_TO_PX;
             
-            // Enforce minimum size
-            if (imgWPx > 0 && imgHPx > 0 && (imgWPx < 24 || imgHPx < 24)) {
-                const scale = Math.max(24.0 / imgWPx, 24.0 / imgHPx);
-                imgWPx *= scale;
-                imgHPx *= scale;
-            }
-            
             const imgXPx = imgOffX * this.INCH_TO_PX;
-            const imgYPx = imgOffY * this.INCH_TO_PX;
-            
+            const imgYPx = hPx - (imgOffY + imgH) * this.INCH_TO_PX;
+
             elements.push(
                 `<image x="${imgXPx.toFixed(2)}" y="${imgYPx.toFixed(2)}" ` +
                 `width="${imgWPx.toFixed(2)}" height="${imgHPx.toFixed(2)}" ` +

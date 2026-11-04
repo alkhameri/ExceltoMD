@@ -56,3 +56,17 @@ test('keeps distinct captions and widths for the same source sheet',async t=>{
   x.pending[0].resolve('First caption');x.pending[1].resolve('Second caption');await tick();
   assert.equal(x.service.get(a,'doc'),'First caption');assert.equal(x.service.get(b,'doc'),'Second caption');
 });
+
+test('caches Markdown and nmd views independently and refreshes both on save',async t=>{
+  const x=setup(t); const plain={...request,markdown:false};
+  x.service.get(request,'doc'); x.service.get(plain,'doc'); await tick();
+  assert.equal(x.pending.length,2); assert.equal(x.watchers.size,1);
+  x.pending[0].resolve('<s>old</s>'); x.pending[1].resolve('~~old~~'); await tick();
+  assert.equal(x.service.get(request,'doc'),'<s>old</s>');
+  assert.equal(x.service.get(plain,'doc'),'~~old~~');
+  x.watchers.get(request.file)(); await delay(20); await tick();
+  assert.equal(x.pending.length,4);
+  x.pending[2].resolve('<s>new</s>'); x.pending[3].resolve('~~new~~'); await tick();
+  assert.equal(x.service.get(request,'doc'),'<s>new</s>');
+  assert.equal(x.service.get(plain,'doc'),'~~new~~');
+});

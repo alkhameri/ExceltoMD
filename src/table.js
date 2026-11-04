@@ -1,6 +1,7 @@
 'use strict';
 const XLSX = require('xlsx');
 const {escapeHtml, messageHtml} = require('./html');
+const {renderCell} = require('./cell-markdown');
 function renderTable(workbook, request) {
   const {sheet: selector, filename, maxRows = 1000, maxColumns = 64} = request;
   const name = typeof selector === 'number' ? workbook.SheetNames[selector - 1] : workbook.SheetNames.find(name => name.toLowerCase() === selector.toLowerCase());
@@ -28,7 +29,7 @@ function renderTable(workbook, request) {
   }
   let uncachedFormulas = false;
   const width = Number.isInteger(request.width) && request.width >= 1 && request.width <= 10000 ? ` style="width: ${request.width}px; max-width: 100%"` : '';
-  const html = [`<div class="excel-md-scroll"${width} tabindex="0" role="region" aria-label="${escapeHtml(caption)}"><table class="excel-md-table"><caption>${escapeHtml(caption)}</caption><tbody>`];
+  const html = [`<div class="excel-md-scroll"${width} tabindex="0" role="region" aria-label="${escapeHtml(caption)}"><table class="excel-md-table${request.markdown !== false ? ' excel-md-markdown' : ''}"><caption>${escapeHtml(caption)}</caption><tbody>`];
   for (let row = range.s.r; row <= endRow; row++) {
     html.push('<tr>');
     for (let col = range.s.c; col <= endColumn; col++) {
@@ -42,7 +43,7 @@ function renderTable(workbook, request) {
       }
       const header = row === range.s.r;
       const tag = header ? 'th' : 'td';
-      html.push(`<${tag}${header ? ' scope="col"' : ''}${spans.get(key) || ''}>${escapeHtml(value).replace(/\r\n|\r|\n/g, '<br>')}</${tag}>`);
+      html.push(`<${tag}${header ? ' scope="col"' : ''}${spans.get(key) || ''}>${renderCell(value, request.markdown !== false)}</${tag}>`);
     }
     html.push('</tr>');
   }

@@ -12,5 +12,12 @@
       "visio(\"${1:architecture.vsdx}\", \"${2:Page-1}\", \"${3:CPU pipeline}\"){width: ${4:900}px}"
     ],
     "description": "Embed a live Visio page: file path, page name, display title, optional pixel width."
+  },
+  "Live Excel table with literal text": {
+    "prefix": "xls-nmd",
+    "body": [
+      "xls(\"${1:registers.xlsx}\", \"${2:Registers}\", \"${3:Register map}\", nmd)"
+    ],
+    "description": "Embed a live Excel table with Markdown rendering disabled in cells."
   }
 }

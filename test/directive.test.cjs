@@ -58,3 +58,8 @@ test('renders bare directives and fenced directives with titles and width',()=>{
   assert.deepEqual(seen.map(item=>item.title),['Table','Diagram','Fenced table','Fenced diagram','Single line']);
   assert.deepEqual(seen.map(item=>item.width),[undefined,900,undefined,600,700]);
 });
+test('accepts nmd as the fourth Excel argument and rejects other options',()=>{
+  for(const flag of ['nmd','NMD','"nmd"']) assert.equal(parseDirective(`xls("f.xlsx", "Sheet1", "Title", ${flag}){width: 900px}`).markdown,false);
+  assert.equal(parseDirective('xls("f.xlsx", "Sheet1", "Title")').markdown,undefined);
+  for(const source of ['xls("f.xlsx","Sheet1","Title", typo)','visio("f.vsdx","Page-1","Title",nmd)','xls("f.xlsx","Sheet1","Title",nmd,nmd)']) assert.throws(()=>parseDirective(source));
+});

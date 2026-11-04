@@ -1,0 +1,22 @@
+[
+  {
+    "name": "microsoft-template",
+    "url": "https://raw.githubusercontent.com/microsoft/PowerPnPGuidanceHub/890ef5ad8552c3d75afe17b7611b26a53bc6369c/templates/architecture/Reference%20architecture%20diagram%20template%20(visio%20option).vsdx",
+    "sha256": "87b2513a78344bf8625c92332df9fa28fc5b9ebda6017c9d4cdce5a1641f2bd5"
+  },
+  {
+    "name": "sccm",
+    "url": "https://raw.githubusercontent.com/AnoopCNair/SCCM-Architecture-Visio/291462b84ed90ba26e9bfd02453a4d4c00c59a94/SCCM%20Intune%20Co-Mgmt%20CMG%20Draft%20V0.2.vsdx",
+    "sha256": "242e8e8d1cf171609f832bbfaa90b6ce77a15ab2b7e347c63dc056e06dc9164d"
+  },
+  {
+    "name": "azure-finops",
+    "url": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/ae174d1dfa4409b198b00e0baf0a74ce8919c865/quickstarts/microsoft.costmanagement/finops-hub/docs/FTK%20Networking.vsdx",
+    "sha256": "542747cf46f0f99a8be587c44825f2113d4d7ecfbfb9a07ffc71ea1882e71e03"
+  },
+  {
+    "name": "azure-gateway",
+    "url": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/ae174d1dfa4409b198b00e0baf0a74ce8919c865/demos/load-balancer-gateway/images/network-diagram.vsdx",
+    "sha256": "aea5a12837743ed38663445621596e98ca718da4c0e031c547c6aaf26c481e5e"
+  }
+]

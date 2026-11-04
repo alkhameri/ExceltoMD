@@ -2,7 +2,7 @@
   "name": "excel-to-markdown-live",
   "displayName": "Excel to Markdown Live",
   "description": "Live Excel tables and Visio diagrams in the Markdown preview, with named sheets, pages, and custom captions.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "YaseenAlkhameri",
   "repository": {
     "type": "git",
@@ -91,18 +91,19 @@
     "check": "npm test && npm run build",
     "package": "vsce package --no-dependencies --allow-missing-repository",
     "publish:marketplace": "node scripts/publish.mjs",
-    "example": "node scripts/create-example.cjs"
+    "example": "node scripts/create-example.cjs",
+    "test:visio:public": "node scripts/test-public-visio.cjs"
   },
   "devDependencies": {
     "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "4.1.0",
-    "esbuild": "0.28.2",
-    "markdown-it": "15.0.3"
+    "esbuild": "0.28.2"
   },
   "dependencies": {
     "@xmldom/xmldom": "0.9.12",
     "fflate": "0.8.3",
     "jszip": "3.10.2",
+    "markdown-it": "15.0.3",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "overrides": {

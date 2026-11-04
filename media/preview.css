@@ -13,3 +13,7 @@
 .excel-md-figure figcaption { text-align: left; padding: 0.7em 0.9em; font-weight: 600; }
 .excel-md-diagram { overflow-x: auto; border: 1px solid var(--vscode-panel-border, #8885); border-radius: 5px; background: white; }
 .excel-md-visio { display: block; max-width: 100%; height: auto; }
+.excel-md-markdown th, .excel-md-markdown td { white-space: normal; }
+.excel-md-markdown :is(th, td) > :first-child { margin-top: 0; }
+.excel-md-markdown :is(th, td) > :last-child { margin-bottom: 0; }
+.excel-md-markdown :is(pre, code) { white-space: pre-wrap; }

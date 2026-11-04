@@ -7,7 +7,7 @@ class WorkbookService {
   }
   get(request, documentId) {
     if (this.disposed) return messageHtml('The workbook preview has been closed.');
-    const key = JSON.stringify([request.file, request.root, request.kind, request.filename, request.sheet, request.title, request.width, request.maxRows, request.maxColumns]);
+    const key = JSON.stringify([request.file, request.root, request.kind, request.filename, request.sheet, request.title, request.width, request.markdown !== false, request.maxRows, request.maxColumns]);
     let entry = this.entries.get(key);
     if (!entry) {
       if (this.entries.size >= 128) return messageHtml('Too many workbook tables are open (128 maximum). Close unused Markdown documents.');

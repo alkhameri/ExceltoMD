@@ -23,11 +23,12 @@ exports.run=async()=>{
   const root=process.env.EXCEL_TEST_WORKSPACE;
   const workbook=path.join(root,'registers.xlsx'); const markdown=path.join(root,'MAD.md');
   const drawing=path.join(root,'architecture.vsdx');
-  await fs.writeFile(workbook,bytes('INITIAL'));
+  await fs.writeFile(workbook,bytes('~~INITIAL~~'));
   await fs.writeFile(drawing,await drawingBytes());
   const source=[
     '# Register specification',
     'xls("registers.xlsx", "Registers", "Register map")',
+    'xls("registers.xlsx", "Registers", "Register map", nmd)',
     '```xls("registers.xlsx", "Registers", "Control registers")\n```',
     "'''xls(registers.xlsx, 2)'''",
     'visio("architecture.vsdx", "Page-1", \'CPU pipeline\'){width: 900px}',
@@ -58,12 +59,14 @@ exports.run=async()=>{
   await vscode.window.showTextDocument(document);
   await vscode.commands.executeCommand('markdown.showPreviewToSide',document.uri);
   await until(()=>frames.some(html=>html.includes('INITIAL')) && frames.some(html=>html.includes('ENABLE')),'built-in preview renders both workbook sheets');
+  await until(()=>frames.some(html=>html.includes('<s>INITIAL</s>')) && frames.some(html=>html.includes('~~INITIAL~~')),'Markdown and nmd render independently for the same sheet and caption');
   await until(()=>frames.some(html=>html.includes('<caption>Register map</caption>')) && frames.some(html=>html.includes('<caption>Control registers</caption>')),'bare and fenced directives give the same sheet independent titles');
   await until(()=>frames.some(html=>drawingText(html).includes('Fetch') && html.includes('<figcaption>CPU pipeline</figcaption>') && html.includes('width: 900px')) && frames.some(html=>drawingText(html).includes('Register bank')),'built-in preview renders both named Visio pages with captions and sizing');
   // No render or refresh commands after these writes: only the filesystem watcher can trigger the preview.
   let cursor=frames.length;
-  await fs.writeFile(workbook,bytes('SAVED_42'));
+  await fs.writeFile(workbook,bytes('~~SAVED_42~~'));
   await until(()=>frames.slice(cursor).some(html=>html.includes('SAVED_42')),'a workbook save automatically refreshes the visible preview');
+  await until(()=>frames.slice(cursor).some(html=>html.includes('<s>SAVED_42</s>')) && frames.slice(cursor).some(html=>html.includes('~~SAVED_42~~')),'a save refreshes both Markdown and nmd views');
   cursor=frames.length;
   const replacement=path.join(root,'excel-save.tmp'); await fs.writeFile(replacement,bytes('ATOMIC_99')); await fs.rename(replacement,workbook);
   await until(()=>frames.slice(cursor).some(html=>html.includes('ATOMIC_99')),'an atomic Excel-style replacement refreshes the preview');

@@ -12,3 +12,12 @@ the VSDX page manifest and relationships, bounds ZIP expansion, rejects DTDs,
 sanitizes the generated SVG, and embeds it as an image with a separate caption.
 
 Rendering is a supported subset of Visio, not pixel-perfect Visio compatibility.
+
+The 0.3.0 adaptation also uses direct-child traversal for nested groups and
+shape text/media, preserves source order, removes inferred connection lines,
+collision displacement and container recoloring, records deleted geometry
+rows/children and partial geometry flags, reads FillGradient sections, and
+preserves image size and its upward-Y source offset. The application's
+`src/visio-renderer.js` and `src/visio-geometry.js` supply inheritance, transforms,
+text layout, connectors, gradient handling and curve evaluation. No native
+renderer or WebAssembly runtime is bundled.

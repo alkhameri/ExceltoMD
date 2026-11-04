@@ -53,14 +53,26 @@ Type `xls` or `visio` in a Markdown editor to insert a snippet. The command **Ex
 - `.xlsx`, `.xls`, `.xlsm`, and `.xlsb` workbooks, including multiple sheets and workbooks in one document.
 - The used cell range, with its first row as the column header.
 - Saved number formats, text, line breaks, booleans, and merged cells.
+- Markdown inside cells, including `~~strikethrough~~`, **bold**, *italics*, inline code, links, lists, and code blocks.
 - Saved formula results. Formulas are not calculated by the extension; recalculate and save in Excel first. A formula with no saved value is shown as formula text with a notice.
 - A scrollable table using the current VS Code theme, with clear loading and error messages.
+
+Markdown rendering is on by default. Add the optional fourth argument `nmd` to display the cell text literally:
+
+```text
+xls("registers.xlsx", "Registers", "Register map")
+xls("registers.xlsx", "Registers", "Plain register map", nmd)
+```
+
+The first line renders `~~obsolete~~` as strikethrough; the second shows the tildes. This also works inside the supported wrappers and fences. Raw HTML and Markdown images are disabled, and unsafe link protocols are rejected. Excel's own strikethrough/font formatting is separate from Markdown syntax and is not imported.
 
 This is a table preview, not a pixel-perfect copy of Excel. Charts, images, conditional formatting, fonts, cell colors, and macros are not rendered or executed. Hidden rows and columns are included. Password-protected workbooks are not supported. Other renderers, including GitHub, do not understand the custom directive. Markdown source is never rewritten.
 
 ## Visio diagrams
 
 `.vsdx` pages render locally as SVG images with a caption above them. The renderer supports common shapes, text, connectors, groups, master shapes, colors, gradients, background pages, and supported embedded raster images. You can embed several pages or give the same page different captions in one document.
+
+Nested groups retain their coordinates and rotation; reflected shapes keep readable text. Connector paths follow saved geometry. Cubic and quadratic curves, elliptical arcs, and sampled NURBS curves support cloud and other curved shapes. Cached colors and gradient stops are preserved, and text is no longer moved to avoid collisions.
 
 Visio rendering is approximate. Complex ShapeSheet formulas, specialized stencils, advanced effects, and embedded objects may differ from Visio or be omitted. EMF, WMF, and TIFF pictures may not display; use PNG or JPEG for embedded pictures. Older `.vsd` files are not supported; save as `.vsdx` first. Diagrams retain the drawing's colors on a white canvas in either VS Code theme.
 
@@ -73,9 +85,9 @@ Excel and Visio files are watched for creation, changes, deletion, and replace-o
 | `excelToMarkdown.maxRows` | 1,000 | 10,000 |
 | `excelToMarkdown.maxColumns` | 64 | 256 |
 
-There is also a 50,000-cell limit per rendered table, a 32 MB source-file limit, and a 15-second limit per read. Truncated tables show a notice. VSDX archives are limited to 64 MB expanded, 2,048 parts, 10,000 shapes per page, and 8 MB per rendered SVG image. At most 128 distinct source/sheet-or-page/title/settings combinations are cached; close unused Markdown documents to release them.
+There is also a 50,000-cell limit per rendered table, a 32 MB source-file limit, and a 15-second limit per read. Truncated tables show a notice. VSDX archives are limited to 64 MB expanded, 2,048 parts, 10,000 shapes per page, 20,000 shapes after master expansion, 64 nested groups, and 8 MB per rendered SVG image. At most 128 distinct source/sheet-or-page/title/settings combinations are cached; close unused Markdown documents to release them.
 
-Source content stays on your machine (or your remote VS Code extension host). There are no network requests or telemetry. Workbook content is escaped as text, and generated SVG is sanitized and embedded as an image. Untrusted workspaces must be trusted before files can be read. Files and symlinks outside the allowed workspace folder are rejected. Browser-only and virtual workspaces are not supported.
+Source content stays on your machine (or your remote VS Code extension host). The extension makes no network requests and has no telemetry. Workbook Markdown disables HTML, images, and unsafe link protocols; `nmd` escapes all cell content as text. Generated SVG is sanitized and embedded as an image. Untrusted workspaces must be trusted before files can be read. Files and symlinks outside the allowed workspace folder are rejected. Browser-only and virtual workspaces are not supported.
 
 ## Try the register example
 
@@ -91,6 +103,8 @@ npm run check
 npm run test:integration
 npm run package
 ```
+
+`npm test` includes public Visio fixtures for groups, rotation, colors, connectors, and master shapes, plus a 1,200-shape stress test. Run `npm run test:visio:public` to download four larger public architecture drawings and check all 10 pages through the bounded worker. The command verifies pinned source hashes and writes a local SVG gallery for visual review. Source details are in `test/fixtures/visio/ORIGIN.md`.
 
 Press F5 in VS Code to launch an Extension Development Host, open `examples/MAD.md`, and open its built-in preview. After changing source, rebuild and reload the development host.
 

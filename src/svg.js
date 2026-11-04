@@ -2,7 +2,8 @@
 const {DOMParser, DOMImplementation, XMLSerializer} = require('@xmldom/xmldom');
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const ELEMENTS = new Set('svg g path rect line polyline polygon circle ellipse text tspan defs marker pattern linearGradient radialGradient stop clipPath mask filter feDropShadow feGaussianBlur feOffset feMerge feMergeNode feColorMatrix feComposite feFlood image title desc'.split(' '));
-const ATTRIBUTES = new Set('id x y x1 y1 x2 y2 cx cy r rx ry dx dy d points width height viewBox preserveAspectRatio transform fill fill-opacity fill-rule stroke stroke-width stroke-opacity stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit opacity font-family font-size font-weight font-style text-anchor dominant-baseline alignment-baseline text-decoration letter-spacing xml:space clip-path clip-rule mask filter marker-start marker-mid marker-end markerWidth markerHeight markerUnits refX refY orient offset stop-color stop-opacity patternUnits patternContentUnits patternTransform gradientUnits gradientTransform spreadMethod fx fy stdDeviation in in2 result type values operator k1 k2 k3 k4 flood-color flood-opacity color-interpolation-filters'.split(' '));
+const ATTRIBUTES = new Set('id x y x1 y1 x2 y2 cx cy r rx ry dx dy d points width height viewBox preserveAspectRatio transform fill fill-opacity fill-rule stroke stroke-width stroke-opacity stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit opacity font-family font-size font-weight font-style font-stretch font-variant text-anchor dominant-baseline alignment-baseline text-decoration textLength lengthAdjust letter-spacing word-spacing writing-mode baseline-shift xml:space clip-path clip-rule mask filter marker-start marker-mid marker-end markerWidth markerHeight markerUnits refX refY orient offset stop-color stop-opacity patternUnits patternContentUnits patternTransform gradientUnits gradientTransform spreadMethod fx fy stdDeviation in in2 result type values operator k1 k2 k3 k4 flood-color flood-opacity color-interpolation-filters'.split(' '));
+const STYLE_ATTRIBUTES = new Set('fill fill-opacity fill-rule stroke stroke-width stroke-opacity stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit opacity font-family font-size font-weight font-style font-stretch font-variant text-anchor dominant-baseline alignment-baseline text-decoration letter-spacing word-spacing writing-mode baseline-shift clip-path clip-rule mask filter marker-start marker-mid marker-end stop-color stop-opacity flood-color flood-opacity'.split(' '));
 
 function parseXml(source) {
   if (/<!\s*(DOCTYPE|ENTITY)\b/i.test(source)) throw new Error('XML document types and entity declarations are not supported.');
@@ -23,15 +24,28 @@ function sanitizeSvg(source) {
     }
     if (node.nodeType !== 1 || node.namespaceURI !== SVG_NS || !ELEMENTS.has(node.localName)) return;
     const output = parent ? doc.createElementNS(SVG_NS, node.localName) : doc.documentElement;
+    function setSafeAttribute(name, value) {
+      if (/url\s*\(/i.test(value) && !/^url\(\s*#[\w.:-]+\s*\)$/i.test(value)) return;
+      // No CSS escapes, expressions, declarations or variable substitution.
+      if (/[\\{};]|expression\s*\(|var\s*\(/i.test(value)) return;
+      output.setAttribute(name, value);
+    }
     for (const attr of Array.from(node.attributes)) {
       if (attr.localName === 'href') {
         const internal = /^#[\w.:-]+$/.test(attr.value);
         const raster = node.localName === 'image' && /^data:image\/(?:png|jpeg|gif|webp|bmp);base64,[a-z\d+/=\s]+$/i.test(attr.value);
         if (internal || raster) output.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', attr.value);
       } else if (ATTRIBUTES.has(attr.name)) {
-        if (/url\s*\(/i.test(attr.value) && !/^url\(\s*#[\w.:-]+\s*\)$/i.test(attr.value)) continue;
-        output.setAttribute(attr.name, attr.value);
+        setSafeAttribute(attr.name, attr.value);
       }
+    }
+    // Convert presentation properties in style attributes using only
+    // allowlisted declarations to SVG attributes, preserving their precedence.
+    for (const declaration of (node.getAttribute('style') || '').split(';')) {
+      const colon = declaration.indexOf(':');
+      if (colon < 0) continue;
+      const name = declaration.slice(0, colon).trim().toLowerCase();
+      if (STYLE_ATTRIBUTES.has(name)) setSafeAttribute(name, declaration.slice(colon + 1).trim());
     }
     if (parent) parent.appendChild(output);
     for (const child of Array.from(node.childNodes)) copy(child, output, depth + 1);

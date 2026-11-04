@@ -1,12 +1,12 @@
 # Publish Excel to Markdown Live
 
-The configured publisher ID is `YaseenAlkhameri`. The extension is not on the Marketplace yet; publishing requires access to that registered Marketplace publisher. No publisher credentials are stored in this repository.
+The configured publisher ID is `YaseenAlkhameri`. Version `0.1.0` is already published at https://marketplace.visualstudio.com/items?itemName=YaseenAlkhameri.excel-to-markdown-live. Publishing updates requires access to that publisher or the Trusted Publishing policy below. No publisher credentials are stored in this repository.
 
 1. Sign in at https://marketplace.visualstudio.com/manage and confirm you have access to the publisher with ID `YaseenAlkhameri`. Create it first if it is not registered yet.
 2. Confirm the `publisher` field in `package.json` matches that ID. The repository and issue URLs point to `alkhameri/ExceltoMD`. Choose the final extension name before the first release.
 3. Run `npm ci`, `npm run check`, `npm run test:integration`, and `npm run package`. Install the VSIX in a clean VS Code profile and open the register example.
-4. On your publisher's management page, select **New extension â†’ Visual Studio Code**, upload the VSIX, and publish it. For later versions, increment `package.json`'s version and update `CHANGELOG.md` first.
-5. Confirm the public listing, install it by searching the Extensions view, and update the README's installation instructions with its real Marketplace URL.
+4. Push a version tag to publish through the workflow below. As a manual alternative, open the existing extension on your publisher's management page and upload the new VSIX as an update. Every update needs a new version in `package.json` and an entry in `CHANGELOG.md`.
+5. Confirm the new version on the public listing and install it from the Extensions view.
 
 ## Automated releases
 
@@ -24,11 +24,11 @@ In Marketplace, select publisher `YaseenAlkhameri`, then **Trusted Publishing â†
 
 For a private GitHub repository, run the workflow within 48 hours of creating the policy. Its first successful token exchange activates the policy permanently.
 
-After the policy is configured, publish the first version (if `0.1.0` has not already been published):
+After the policy is configured, publish an already-committed version that has not been published yet (for example, `0.1.1`):
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 For later releases, commit the code and changelog changes, then run:

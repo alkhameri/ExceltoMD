@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Link the extension to its GitHub source repository and public Marketplace listing.
+- Automate version-tag releases with GitHub Actions and Marketplace Trusted Publishing.
+- Validate release tags against the package version before publishing.
+
 ## 0.1.0
 
 - Embed Excel tables with `'''xls(filename, sheetnumber)'''` or empty `xls(...)` Markdown fences.

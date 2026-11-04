@@ -2,7 +2,7 @@
   "name": "excel-to-markdown-live",
   "displayName": "Excel to Markdown Live",
   "description": "Live Excel tables in the built-in Markdown preview. Keep register specifications synchronized with saved workbooks.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "YaseenAlkhameri",
   "repository": {
     "type": "git",

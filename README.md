@@ -12,7 +12,7 @@ Open **Markdown: Open Preview to the Side**, edit `registers.xlsx` in Excel, and
 
 ## Install
 
-The extension is being prepared for its first public Marketplace release; it is not listed yet. For now, build or obtain the `.vsix` package, then use **Extensions: Install from VSIX…** in VS Code. Requires VS Code 1.90 or later on Windows, macOS, or Linux. No Excel installation is needed to view saved workbooks.
+Install [Excel to Markdown Live from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=YaseenAlkhameri.excel-to-markdown-live), or search for **Excel to Markdown Live** by **Yaseen Alkhameri** in VS Code's Extensions view. You can also install a downloaded `.vsix` using **Extensions: Install from VSIX…**. Requires VS Code 1.90 or later on Windows, macOS, or Linux. No Excel installation is needed to view saved workbooks.
 
 ## Syntax
 
@@ -79,7 +79,7 @@ SheetJS is pinned to its official 0.20.3 distribution, rather than the outdated 
 
 ## Publish publicly
 
-The configured Marketplace publisher ID is `YaseenAlkhameri`, and the source repository is `alkhameri/ExceltoMD` on GitHub. Pushing a version tag such as `v0.1.0` runs the publishing workflow, which tests, builds, and publishes that version. The tag must match the version in `package.json`. See `PUBLISHING.md` for the one-time Trusted Publishing setup and release instructions.
+The configured Marketplace publisher ID is `YaseenAlkhameri`, and the source repository is `alkhameri/ExceltoMD` on GitHub. Pushing a version tag such as `v0.1.1` runs the publishing workflow, which tests, builds, and publishes that version. The tag must match the version in `package.json`. See `PUBLISHING.md` for the one-time Trusted Publishing setup and release instructions.
 
 ## License
 
